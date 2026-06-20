@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architectures — A Reading Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+:root{
+  --paper:#FAF8F3;
+  --paper-raised:#FFFFFF;
+  --ink:#1A1A18;
+  --ink-soft:#5B5750;
+  --rule:#E3DECF;
+  --rule-strong:#C9C2AC;
+
+  --fam-foundation:#8A5A2B;
+  --fam-recurrent:#6B4C9A;
+  --fam-vision:#1E7A6F;
+  --fam-generative:#B23A5C;
+  --fam-attention:#2B4C7E;
+  --fam-multimodal:#A8821E;
+  --fam-efficiency:#C76E3C;
+  --fam-reasoning:#1E6B8C;
+
+  --accent: var(--fam-attention);
+  --accent-soft: rgba(43,76,126,0.09);
+
+  --serif:'Source Serif 4', Georgia, serif;
+  --mono:'JetBrains Mono', monospace;
+  --sans:'Inter', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+body{display:flex; flex-direction:column; min-height:100vh;}
+
+header.top{
+  padding: 24px 32px 20px;
+  border-bottom: 1.5px solid var(--ink);
+  display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:14px;
+}
+header.top .brand{font-family:var(--serif); font-size:25px; font-weight:700; letter-spacing:-0.01em;}
+header.top .brand small{display:block; font-family:var(--sans); font-size:10.5px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:var(--ink-soft); margin-top:3px;}
+header.top .right{display:flex; align-items:center; gap:14px;}
+header.top .meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); text-align:right;}
+#mapToggleBtn{
+  font-family:var(--sans); font-size:12.5px; font-weight:600; background:var(--ink); color:var(--paper);
+  border:none; padding:9px 16px; cursor:pointer; letter-spacing:0.02em;
+}
+#mapToggleBtn:hover{opacity:0.85;}
+
+/* ---------- Auth widget ---------- */
+#authWidget{display:flex; align-items:center; gap:10px; font-family:var(--sans); font-size:12.5px;}
+#authWidget .user-chip{display:flex; align-items:center; gap:8px; color:var(--ink-soft);}
+#authWidget button{
+  font-family:var(--sans); font-size:12px; font-weight:600; background:none; color:var(--ink);
+  border:1.4px solid var(--ink); padding:7px 13px; cursor:pointer;
+}
+#authWidget button:hover{background:var(--ink); color:var(--paper);}
+#signInBtn{background:var(--ink); color:var(--paper);}
+#signInBtn:hover{opacity:0.85;}
+
+#authOverlay{
+  position:fixed; inset:0; background:rgba(26,26,24,0.55); z-index:200; display:none;
+  align-items:center; justify-content:center; padding:24px;
+}
+#authOverlay.open{display:flex;}
+.auth-modal{
+  background:var(--paper); border:2px solid var(--ink); width:100%; max-width:380px; padding:28px;
+}
+.auth-modal h2{font-family:var(--serif); font-size:22px; margin:0 0 6px;}
+.auth-modal p.sub{font-size:12.5px; color:var(--ink-soft); margin:0 0 20px;}
+.auth-modal label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em;}
+.auth-modal input{
+  width:100%; padding:10px 12px; font-family:var(--sans); font-size:14px; border:1.4px solid var(--ink);
+  background:var(--paper-raised); margin-bottom:14px; color:var(--ink);
+}
+.auth-modal input:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+.auth-modal .auth-primary{
+  width:100%; padding:11px; font-family:var(--sans); font-size:13.5px; font-weight:600; background:var(--ink);
+  color:var(--paper); border:none; cursor:pointer; margin-bottom:10px;
+}
+.auth-modal .auth-google{
+  width:100%; padding:11px; font-family:var(--sans); font-size:13.5px; font-weight:600; background:var(--paper-raised);
+  color:var(--ink); border:1.4px solid var(--ink); cursor:pointer; margin-bottom:14px;
+}
+.auth-modal .auth-toggle{font-size:12.5px; text-align:center; color:var(--ink-soft);}
+.auth-modal .auth-toggle a{color:var(--accent); cursor:pointer; text-decoration:underline;}
+.auth-modal .auth-error{font-size:12.5px; color:var(--fam-generative); margin-bottom:12px; min-height:1px;}
+.auth-modal .auth-close{position:absolute; top:14px; right:16px; background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); padding:4px;}
+.auth-modal{position:relative;}
+
+.layout{display:flex; flex:1; max-width:1480px; width:100%; margin:0 auto;}
+
+nav.index{
+  width: 300px; min-width:230px; flex-shrink:0;
+  border-right: 1.5px solid var(--ink);
+  padding: 0 0 60px 0;
+  overflow-y:auto;
+  position:sticky; top:0; align-self:flex-start; height:100vh;
+}
+nav.index .section-head{
+  font-family:var(--sans); font-size:10.5px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--paper); background:var(--ink);
+  padding:10px 22px; margin-top:18px;
+}
+nav.index .section-head:first-child{margin-top:0;}
+nav.index .section-sub{font-family:var(--mono); font-size:9.5px; color:#d8d2bf; display:block; margin-top:2px; letter-spacing:0.02em; text-transform:none;}
+ul.model-list{list-style:none; margin:0; padding:0;}
+ul.model-list li{border-bottom:1px solid var(--rule);}
+ul.model-list a{
+  display:flex; align-items:center; gap:9px; padding:10px 22px; text-decoration:none; color:var(--ink);
+  font-size:13.3px; line-height:1.3;
+}
+ul.model-list a .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+ul.model-list a .txt{min-width:0;}
+ul.model-list a .yr{font-family:var(--mono); font-size:10px; color:var(--ink-soft); display:block;}
+ul.model-list a .nm{font-weight:500; display:block;}
+ul.model-list a:hover{background:var(--accent-soft);}
+ul.model-list a.active{background:var(--ink);}
+ul.model-list a.active .nm{color:var(--paper); font-weight:600;}
+ul.model-list a.active .yr{color:#bdb6a0;}
+
+main.reader{flex:1; padding: 0; min-width:0;}
+.reader-inner{max-width:780px; margin:0 auto; padding: 40px 40px 100px;}
+
+.model-head{margin-bottom:26px; padding-bottom:16px; border-bottom: 3px solid var(--accent);}
+.model-head .fam-tag{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11.5px; color:var(--accent);
+  letter-spacing:0.04em; font-weight:500;
+}
+.model-head .fam-tag .dot{width:8px; height:8px; border-radius:50%; background:var(--accent);}
+.model-head h1{font-family:var(--serif); font-size:33px; font-weight:700; margin:5px 0 0; line-height:1.15; letter-spacing:-0.01em; color:var(--ink);}
+
+.block{margin-bottom:30px;}
+.block h2{
+  font-family:var(--sans); font-size:10.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--ink-soft); margin:0 0 11px;
+}
+.block p{font-size:16px; line-height:1.65; margin:0 0 8px; color:var(--ink);}
+
+.evo-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+.evo-item{
+  display:flex; gap:14px; align-items:flex-start; background:var(--paper-raised);
+  border:1.4px solid var(--rule-strong); padding:13px 15px; border-radius:2px;
+}
+.evo-item .evo-from{
+  flex-shrink:0; font-family:var(--mono); font-size:11.5px; padding:5px 10px; border-radius:2px;
+  white-space:nowrap; cursor:pointer; align-self:flex-start; margin-top:1px;
+}
+.evo-item .evo-delta{font-size:14.8px; line-height:1.55; color:var(--ink);}
+.evo-root{
+  font-size:14.5px; color:var(--ink-soft); font-style:italic; background:var(--accent-soft);
+  border:1.4px dashed var(--accent); padding:12px 15px; border-radius:2px;
+}
+.evo-descendants{margin-top:14px; font-size:13.5px; color:var(--ink-soft);}
+.evo-descendants .dlist{display:flex; flex-wrap:wrap; gap:7px; margin-top:8px;}
+.evo-descendants .dlist span{
+  font-family:var(--mono); font-size:11.5px; padding:5px 10px; border:1.3px solid var(--rule-strong);
+  border-radius:2px; cursor:pointer; color:var(--ink);
+}
+.evo-descendants .dlist span:hover{border-color:var(--accent); color:var(--accent);}
+
+.mech-list{margin:0; padding:0; list-style:none;}
+.mech-list li{
+  font-size:15px; line-height:1.6; padding:12px 15px; margin-bottom:9px;
+  background:var(--paper-raised); border-left:3px solid var(--accent); border-radius:1px;
+}
+.mech-list .katex{font-size:1.02em;}
+
+.diagram-box{
+  background:var(--paper-raised); border:1.5px solid var(--ink); padding:12px 8px 6px; margin: 6px 0 0;
+}
+.diagram-svg{width:100%; height:auto; display:block;}
+
+.significance{
+  background: var(--accent-soft); border:1.5px solid var(--accent);
+  padding:17px 19px; font-size:15.5px; line-height:1.6;
+}
+.significance::before{content:"WHY IT MATTERED"; display:block; font-family:var(--sans); font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--accent); margin-bottom:7px;}
+
+.interact{margin-top:8px; border:1.5px solid var(--ink); background:var(--paper-raised);}
+.interact-tabs{display:flex; border-bottom:1.5px solid var(--ink);}
+.interact-tabs button{
+  flex:1; padding:11px 8px; font-family:var(--sans); font-size:12.5px; font-weight:600;
+  background:var(--paper); border:none; border-right:1px solid var(--rule); color:var(--ink-soft);
+  cursor:pointer; letter-spacing:0.02em;
+}
+.interact-tabs button:last-child{border-right:none;}
+.interact-tabs button.active{background:var(--ink); color:var(--paper);}
+.interact-body{padding:18px 20px; min-height:90px;}
+
+.signin-prompt{
+  font-size:13.5px; color:var(--ink-soft); background:var(--accent-soft); border:1.3px dashed var(--accent);
+  padding:11px 14px; margin-bottom:14px; border-radius:2px;
+}
+.signin-prompt a{color:var(--accent); cursor:pointer; text-decoration:underline; font-weight:600;}
+
+.deepdive-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+.deepdive-chips button{
+  font-family:var(--mono); font-size:12px; padding:7px 12px; background:var(--paper);
+  border:1.3px solid var(--accent); color:var(--accent); cursor:pointer; border-radius:2px;
+}
+.deepdive-chips button:hover{background:var(--accent); color:var(--paper);}
+.deepdive-out, .chat-log, .quiz-body{font-size:14.8px; line-height:1.6;}
+.deepdive-out p, .chat-log p{margin:0 0 10px;}
+.deepdive-out .katex-display{margin:10px 0;}
+
+.chat-log{max-height:320px; overflow-y:auto; margin-bottom:12px; padding-right:4px;}
+.chat-msg{margin-bottom:12px; padding:10px 13px; border-radius:3px;}
+.chat-msg.user{background:var(--rule); margin-left:30px;}
+.chat-msg.assistant{background:var(--accent-soft); border-left:3px solid var(--accent); margin-right:10px;}
+.chat-msg .role{font-family:var(--mono); font-size:9.5px; color:var(--ink-soft); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.06em;}
+.chat-input-row{display:flex; gap:8px;}
+.chat-input-row input{
+  flex:1; padding:10px 12px; font-family:var(--sans); font-size:14px; border:1.4px solid var(--ink);
+  background:var(--paper); color:var(--ink);
+}
+.chat-input-row input:focus{outline:2px solid var(--accent); outline-offset:-1px;}
+.chat-input-row button{
+  padding:10px 18px; font-family:var(--sans); font-size:13px; font-weight:600; background:var(--ink); color:var(--paper);
+  border:none; cursor:pointer;
+}
+.chat-input-row button:disabled{opacity:0.4; cursor:default;}
+
+.quiz-q{font-size:15.5px; font-weight:500; margin-bottom:14px;}
+.quiz-opts{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+.quiz-opts button{
+  text-align:left; padding:10px 14px; font-family:var(--sans); font-size:14px; background:var(--paper);
+  border:1.4px solid var(--rule-strong); cursor:pointer; color:var(--ink);
+}
+.quiz-opts button:hover{border-color:var(--accent);}
+.quiz-opts button.correct{background:rgba(30,122,111,0.15); border-color:var(--fam-vision);}
+.quiz-opts button.incorrect{background:rgba(178,58,92,0.12); border-color:var(--fam-generative);}
+.quiz-feedback{font-size:14px; line-height:1.55; padding:12px 14px; background:var(--paper); border-left:3px solid var(--accent); margin-bottom:12px;}
+.quiz-next{font-family:var(--sans); font-size:13px; font-weight:600; background:var(--ink); color:var(--paper); border:none; padding:9px 16px; cursor:pointer;}
+
+.loading-dots{font-family:var(--mono); font-size:13px; color:var(--ink-soft);}
+.loading-dots::after{content:""; animation: dots 1.4s steps(4,end) infinite;}
+@keyframes dots{0%,20%{content:"";}40%{content:".";}60%{content:"..";}80%,100%{content:"...";}}
+
+.nav-foot{display:flex; justify-content:space-between; margin-top:46px; padding-top:16px; border-top:1px solid var(--rule); gap:16px;}
+.nav-foot button{
+  font-family:var(--sans); font-size:13px; background:none; border:1.5px solid var(--ink); color:var(--ink);
+  padding:9px 16px; cursor:pointer; flex:1; text-align:left;
+}
+.nav-foot button:last-child{text-align:right;}
+.nav-foot button:hover{background:var(--ink); color:var(--paper);}
+.nav-foot button:disabled{opacity:0.25; cursor:default;}
+.nav-foot button:disabled:hover{background:none; color:var(--ink);}
+.nav-foot .dir{display:block; font-size:9.5px; opacity:0.65; letter-spacing:0.08em; text-transform:uppercase;}
+
+#lineageOverlay{
+  position:fixed; inset:0; background:rgba(26,26,24,0.55); z-index:100; display:none;
+  align-items:center; justify-content:center; padding:30px;
+}
+#lineageOverlay.open{display:flex;}
+.lineage-modal{
+  background:var(--paper); border:2px solid var(--ink); width:100%; max-width:1500px; height:90vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.lineage-modal-head{
+  display:flex; justify-content:space-between; align-items:center; padding:16px 24px;
+  border-bottom:1.5px solid var(--ink); flex-shrink:0;
+}
+.lineage-modal-head h2{font-family:var(--serif); font-size:20px; margin:0; font-weight:700;}
+.lineage-modal-head p{font-family:var(--sans); font-size:12px; color:var(--ink-soft); margin:3px 0 0;}
+#closeLineageBtn{
+  font-family:var(--sans); font-size:13px; font-weight:600; background:none; border:1.5px solid var(--ink);
+  padding:7px 14px; cursor:pointer; color:var(--ink);
+}
+#closeLineageBtn:hover{background:var(--ink); color:var(--paper);}
+.lineage-modal-body{flex:1; overflow:auto; position:relative; padding:10px 24px 24px;}
+.lineage-svg{width:100%; height:auto; display:block; min-width:1200px;}
+#lineageTooltip{
+  position:absolute; display:none; background:var(--ink); color:var(--paper); font-family:var(--sans);
+  font-size:12px; padding:6px 10px; border-radius:3px; pointer-events:none; white-space:nowrap;
+  transform:translate(-50%,-100%); z-index:10;
+}
+
+.mobile-toggle{display:none;}
+@media (max-width: 880px){
+  .layout{flex-direction:column;}
+  nav.index{width:100%; height:auto; position:relative; max-height: 60vh; border-right:none; border-bottom:1.5px solid var(--ink); display:none;}
+  nav.index.open{display:block;}
+  main.reader{order:2;}
+  .mobile-toggle{
+    display:block; width:100%; padding:13px 24px; background:var(--ink); color:var(--paper); border:none;
+    font-family:var(--sans); font-size:13px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+  }
+  .reader-inner{padding:30px 18px 70px;}
+  .model-head h1{font-size:26px;}
+  .interact-tabs button{font-size:11px; padding:10px 4px;}
+  .evo-item{flex-direction:column;}
+  header.top{padding:18px 18px 16px;}
+  header.top .brand{font-size:21px;}
+}
+
+::-webkit-scrollbar{width:9px;}
+::-webkit-scrollbar-thumb{background:var(--rule-strong);}
+::-webkit-scrollbar-track{background:var(--paper);}
+a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Architectures<small>A reading companion · concept → mechanism → significance</small></div>
+  <div class="right">
+    <button id="mapToggleBtn">⤢ Lineage map</button>
+    <div id="authWidget"></div>
+    <div class="meta" id="progress-meta">— / —</div>
+  </div>
+</header>
+
+<button class="mobile-toggle" id="mobileToggle">Browse all models ▾</button>
+
+<div class="layout">
+  <nav class="index" id="indexNav"></nav>
+  <main class="reader">
+    <div class="reader-inner" id="readerInner"></div>
+  </main>
+</div>
+
+<div id="lineageOverlay">
+  <div class="lineage-modal">
+    <div class="lineage-modal-head">
+      <div>
+        <h2>Lineage map</h2>
+        <p>Every architecture, positioned by year (→) and family (↓). Hover a node to trace its edges, click to open it.</p>
+      </div>
+      <button id="closeLineageBtn">Close ✕</button>
+    </div>
+    <div class="lineage-modal-body" id="lineageModalBody">
+      <div id="lineageTooltip"></div>
+    </div>
+  </div>
+</div>
+
+<div id="authOverlay">
+  <div class="auth-modal">
+    <button class="auth-close" id="authCloseBtn">✕</button>
+    <h2 id="authTitle">Sign in</h2>
+    <p class="sub" id="authSub">Save your chats and quiz history across visits.</p>
+    <div class="auth-error" id="authError"></div>
+    <label>Email</label>
+    <input type="email" id="authEmail" placeholder="you@example.com" />
+    <label>Password</label>
+    <input type="password" id="authPassword" placeholder="••••••••" />
+    <button class="auth-primary" id="authPrimaryBtn">Sign in</button>
+    <button class="auth-google" id="authGoogleBtn">Continue with Google</button>
+    <div class="auth-toggle" id="authToggle">Don't have an account? <a id="authToggleLink">Create one</a></div>
+  </div>
+</div>
+
+<script src="data-foundations.js"></script>
+<script src="data-modern.js"></script>
+<script src="diagrams.js"></script>
+<script src="lineage.js"></script>
+<script src="lineage-map.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module">
+import { AUTH } from "./auth.js";
+import { STORE } from "./store.js";
+import { BACKEND_URL } from "./firebase-config.js";
+window.AUTH = AUTH;
+window.STORE = STORE;
+window.BACKEND_URL = BACKEND_URL;
+window.dispatchEvent(new Event("portal-modules-ready"));
+</script>
+<script>
+const ALL = [
+  ...FOUNDATIONS.map(m=>({...m, _section:"foundations"})),
+  ...MODERN.map(m=>({...m, _section:"modern"}))
+];
+let currentIndex = 0;
+
+const STATE = {};
+function getState(id){
+  if(!STATE[id]) STATE[id] = { tab:'deepdive', chat:[], quiz:null };
+  return STATE[id];
+}
+
+function famVar(fam){ return `var(--fam-${fam})`; }
+
+function renderMath(str){
+  return str.replace(/\$([^$]+)\$/g, (m, expr) => {
+    try{ return katex.renderToString(expr, {throwOnError:false}); }
+    catch(e){ return m; }
+  });
+}
+
+function renderRichText(str){
+  const paras = str.split(/\n\n+/);
+  return paras.map(p => `<p>${renderMath(p)}</p>`).join('');
+}
+
+// ---------- Backend API calls (replaces direct Anthropic fetch) ----------
+async function backendCall(path, body){
+  const resp = await fetch(`${window.BACKEND_URL}${path}`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+  if(!resp.ok){
+    const errBody = await resp.json().catch(()=>({detail:"Unknown error"}));
+    throw new Error(errBody.detail || `Request failed (${resp.status})`);
+  }
+  return resp.json();
+}
+
+async function apiDeepdive(m, instruction, maxTokens=700){
+  const data = await backendCall("/api/deepdive", {
+    model_name: m.name, year: m.year, concept: m.concept, mechanism: m.mechanism,
+    instruction, max_tokens: maxTokens
+  });
+  return data.text;
+}
+
+async function apiChat(m, messages, maxTokens=500){
+  const data = await backendCall("/api/chat", {
+    model_name: m.name, year: m.year, concept: m.concept, mechanism: m.mechanism,
+    significance: m.significance, messages, max_tokens: maxTokens
+  });
+  return data.reply;
+}
+
+async function apiQuiz(m, maxTokens=500){
+  return await backendCall("/api/quiz", {
+    model_name: m.name, concept: m.concept, mechanism: m.mechanism, max_tokens: maxTokens
+  });
+}
+
+// ---------- Auth widget ----------
+function renderAuthWidget(){
+  const el = document.getElementById('authWidget');
+  const user = window.AUTH ? window.AUTH.getUser() : null;
+  if(user){
+    const label = user.displayName || user.email || "Signed in";
+    el.innerHTML = `<span class="user-chip">${label}</span><button id="signOutBtn">Sign out</button>`;
+    document.getElementById('signOutBtn').addEventListener('click', async ()=>{
+      await window.AUTH.signOut();
+    });
+  } else {
+    el.innerHTML = `<button id="signInBtn">Sign in</button>`;
+    document.getElementById('signInBtn').addEventListener('click', openAuthModal);
+  }
+}
+
+let authMode = 'signin'; // 'signin' | 'signup'
+function openAuthModal(){
+  authMode = 'signin';
+  updateAuthModalMode();
+  document.getElementById('authError').textContent='';
+  document.getElementById('authOverlay').classList.add('open');
+}
+function updateAuthModalMode(){
+  document.getElementById('authTitle').textContent = authMode==='signin' ? 'Sign in' : 'Create an account';
+  document.getElementById('authPrimaryBtn').textContent = authMode==='signin' ? 'Sign in' : 'Create account';
+  document.getElementById('authToggle').innerHTML = authMode==='signin'
+    ? `Don't have an account? <a id="authToggleLink">Create one</a>`
+    : `Already have an account? <a id="authToggleLink">Sign in</a>`;
+  document.getElementById('authToggleLink').addEventListener('click', ()=>{
+    authMode = authMode==='signin' ? 'signup' : 'signin';
+    updateAuthModalMode();
+  });
+}
+
+function wireAuthModal(){
+  document.getElementById('authCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('authOverlay').classList.remove('open');
+  });
+  document.getElementById('authPrimaryBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+    try{
+      if(authMode==='signin') await window.AUTH.signInWithEmail(email, password);
+      else await window.AUTH.signUpWithEmail(email, password);
+      document.getElementById('authOverlay').classList.remove('open');
+    }catch(e){
+      errEl.textContent = window.AUTH.friendlyError(e);
+    }
+  });
+  document.getElementById('authGoogleBtn').addEventListener('click', async ()=>{
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+    try{
+      await window.AUTH.signInWithGoogle();
+      document.getElementById('authOverlay').classList.remove('open');
+    }catch(e){
+      errEl.textContent = window.AUTH.friendlyError(e);
+    }
+  });
+}
+
+function buildIndex(){
+  const nav = document.getElementById('indexNav');
+  let html = `<div class="section-head">Foundations<span class="section-sub">${FOUNDATIONS.length} architectures · 1958–2022</span></div><ul class="model-list">`;
+  FOUNDATIONS.forEach((m,i)=>{
+    html += `<li><a href="#" data-idx="${i}" class="idx-link"><span class="dot" style="background:${famVar(m.family)}"></span><span class="txt"><span class="yr">${m.year}</span><span class="nm">${m.name}</span></span></a></li>`;
+  });
+  html += `</ul><div class="section-head">Modern &amp; Distinct<span class="section-sub">${MODERN.length} architectures · 2021–2026</span></div><ul class="model-list">`;
+  MODERN.forEach((m,i)=>{
+    const idx = FOUNDATIONS.length + i;
+    html += `<li><a href="#" data-idx="${idx}" class="idx-link"><span class="dot" style="background:${famVar(m.family)}"></span><span class="txt"><span class="yr">${m.year}</span><span class="nm">${m.name}</span></span></a></li>`;
+  });
+  html += `</ul>`;
+  nav.innerHTML = html;
+  nav.querySelectorAll('.idx-link').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      showModel(parseInt(a.dataset.idx));
+      document.getElementById('indexNav').classList.remove('open');
+    });
+  });
+}
+
+function idxOf(id){ return ALL.findIndex(m=>m.id===id); }
+
+function renderEvolutionBlock(m){
+  const parents = LINEAGE[m.id];
+  const descendants = Object.keys(LINEAGE).filter(childId =>
+    LINEAGE[childId].some(edge => edge.id === m.id)
+  );
+
+  let html = `<div class="block"><h2>Evolution</h2>`;
+  if(!parents){
+    html += `<div class="evo-root">No direct architectural ancestor on this list — ${m.name} is a structural original, built from a different first principle than what came before it.</div>`;
+  } else {
+    html += `<ul class="evo-list">`;
+    parents.forEach(edge=>{
+      const parentModel = ALL.find(x=>x.id===edge.id);
+      html += `<li class="evo-item">
+        <span class="evo-from" data-goto="${edge.id}" style="border:1.3px solid ${famVar(parentModel.family)}; color:${famVar(parentModel.family)};">← ${parentModel.year} ${parentModel.name}</span>
+        <span class="evo-delta">${edge.delta}</span>
+      </li>`;
+    });
+    html += `</ul>`;
+  }
+  if(descendants.length){
+    html += `<div class="evo-descendants">What built on this →
+      <div class="dlist">${descendants.map(id=>{
+        const d = ALL.find(x=>x.id===id);
+        return `<span data-goto="${id}" style="color:${famVar(d.family)}; border-color:${famVar(d.family)};">${d.year} ${d.name}</span>`;
+      }).join('')}</div>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+const DEEPDIVE_PROMPTS = [
+  { label:"Derive the math", instruction:"Walk through a step-by-step derivation of the key equation(s) for this architecture, explaining each algebraic step. Be rigorous but concise." },
+  { label:"Worked example", instruction:"Give one small, concrete worked numerical example showing this mechanism operating on toy-sized inputs (e.g. tiny vectors/matrices), with actual numbers." },
+  { label:"Compare to predecessor", instruction:"Explain specifically what this architecture changed relative to whatever came immediately before it in the same lineage, and why that change mattered in practice." },
+  { label:"Common misconception", instruction:"Point out one common misconception or oversimplification people have about this architecture, and correct it precisely." }
+];
+
+function renderInteractPanel(m){
+  return `
+    <div class="interact" id="interactPanel">
+      <div class="interact-tabs">
+        <button data-tab="deepdive" class="${getState(m.id).tab==='deepdive'?'active':''}">Deep dive</button>
+        <button data-tab="chat" class="${getState(m.id).tab==='chat'?'active':''}">Ask about this</button>
+        <button data-tab="quiz" class="${getState(m.id).tab==='quiz'?'active':''}">Quiz me</button>
+      </div>
+      <div class="interact-body" id="interactBody"></div>
+    </div>
+  `;
+}
+
+function signinPromptHtml(){
+  return `<div class="signin-prompt">Sign in to save this across visits — otherwise it'll be lost when you reload. <a id="signinPromptLink">Sign in</a></div>`;
+}
+
+function renderInteractBody(m){
+  const st = getState(m.id);
+  const body = document.getElementById('interactBody');
+  const isSignedIn = window.AUTH && window.AUTH.getUser();
+
+  if(st.tab === 'deepdive'){
+    body.innerHTML = `
+      ${!isSignedIn ? signinPromptHtml() : ''}
+      <div class="deepdive-chips">
+        ${DEEPDIVE_PROMPTS.map((p,i)=>`<button data-prompt="${i}">${p.label}</button>`).join('')}
+      </div>
+      <div class="deepdive-out">${st.deepdiveOut ? renderRichText(st.deepdiveOut) : `<p style="color:var(--ink-soft)">Pick a prompt above for a generated deep-dive on ${m.name}.</p>`}</div>
+    `;
+    const promptLink = body.querySelector('#signinPromptLink');
+    if(promptLink) promptLink.addEventListener('click', openAuthModal);
+
+    body.querySelectorAll('.deepdive-chips button').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const p = DEEPDIVE_PROMPTS[parseInt(btn.dataset.prompt)];
+        const outDiv = body.querySelector('.deepdive-out');
+        outDiv.innerHTML = `<span class="loading-dots">Generating</span>`;
+        try{
+          const text = await apiDeepdive(m, p.instruction, 700);
+          st.deepdiveOut = text;
+          outDiv.innerHTML = renderRichText(text);
+          if(window.STORE && isSignedIn) window.STORE.saveDeepdive(m.id, p.label, text);
+        }catch(e){
+          outDiv.innerHTML = `<p style="color:var(--fam-generative)">Couldn't reach the backend. ${e.message||''}</p>`;
+        }
+      });
+    });
+  } else if(st.tab === 'chat'){
+    body.innerHTML = `
+      ${!isSignedIn ? signinPromptHtml() : ''}
+      <div class="chat-log" id="chatLog">
+        ${st.chat.length===0 ? `<p style="color:var(--ink-soft)">Ask anything about ${m.name} — it'll answer with this page's content as context.</p>` : st.chat.map(msg=>`
+          <div class="chat-msg ${msg.role}"><span class="role">${msg.role==='user'?'you':'claude'}</span>${renderRichText(msg.content)}</div>
+        `).join('')}
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="e.g. why does the additive update prevent vanishing gradients?" />
+        <button id="chatSend">Send</button>
+      </div>
+    `;
+    const promptLink = body.querySelector('#signinPromptLink');
+    if(promptLink) promptLink.addEventListener('click', openAuthModal);
+
+    const input = body.querySelector('#chatInput');
+    const sendBtn = body.querySelector('#chatSend');
+    const log = body.querySelector('#chatLog');
+    async function send(){
+      const text = input.value.trim();
+      if(!text) return;
+      st.chat.push({role:'user', content:text});
+      input.value=''; sendBtn.disabled = true;
+      log.innerHTML = st.chat.map(msg=>`<div class="chat-msg ${msg.role}"><span class="role">${msg.role==='user'?'you':'claude'}</span>${renderRichText(msg.content)}</div>`).join('') + `<div class="chat-msg assistant"><span class="role">claude</span><span class="loading-dots">Thinking</span></div>`;
+      log.scrollTop = log.scrollHeight;
+      try{
+        const reply = await apiChat(m, st.chat, 500);
+        st.chat.push({role:'assistant', content:reply});
+        if(window.STORE && isSignedIn) window.STORE.saveChat(m.id, st.chat);
+      }catch(e){
+        st.chat.push({role:'assistant', content:"Couldn't reach the backend just now. "+(e.message||'')});
+      }
+      sendBtn.disabled = false;
+      log.innerHTML = st.chat.map(msg=>`<div class="chat-msg ${msg.role}"><span class="role">${msg.role==='user'?'you':'claude'}</span>${renderRichText(msg.content)}</div>`).join('');
+      log.scrollTop = log.scrollHeight;
+    }
+    sendBtn.addEventListener('click', send);
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+  } else if(st.tab === 'quiz'){
+    if(!st.quiz){
+      body.innerHTML = `${!isSignedIn ? signinPromptHtml() : ''}<p style="color:var(--ink-soft)">Generate a quick comprehension question on ${m.name}.</p><button class="quiz-next" id="genQuiz">Generate question</button>`;
+      const promptLink = body.querySelector('#signinPromptLink');
+      if(promptLink) promptLink.addEventListener('click', openAuthModal);
+      body.querySelector('#genQuiz').addEventListener('click', ()=>genQuiz(m));
+    } else if(st.quiz === 'loading'){
+      body.innerHTML = `<span class="loading-dots">Writing a question</span>`;
+    } else {
+      const q = st.quiz;
+      body.innerHTML = `
+        <div class="quiz-q">${q.question}</div>
+        <div class="quiz-opts">
+          ${q.options.map((opt,i)=>`<button data-i="${i}">${opt}</button>`).join('')}
+        </div>
+        <div id="quizFeedback"></div>
+      `;
+      body.querySelectorAll('.quiz-opts button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const i = parseInt(btn.dataset.i);
+          const wasCorrect = i === q.correctIndex;
+          body.querySelectorAll('.quiz-opts button').forEach((b,bi)=>{
+            b.disabled = true;
+            if(bi===q.correctIndex) b.classList.add('correct');
+            else if(bi===i) b.classList.add('incorrect');
+          });
+          document.getElementById('quizFeedback').innerHTML = `
+            <div class="quiz-feedback">${q.explanation}</div>
+            <button class="quiz-next" id="nextQ">Next question</button>
+          `;
+          if(window.STORE && isSignedIn) window.STORE.recordQuizAttempt(m.id, q.question, wasCorrect);
+          document.getElementById('nextQ').addEventListener('click', ()=>{ st.quiz=null; renderInteractBody(m); });
+        });
+      });
+    }
+  }
+}
+
+async function genQuiz(m){
+  const st = getState(m.id);
+  st.quiz = 'loading';
+  renderInteractBody(m);
+  try{
+    st.quiz = await apiQuiz(m, 500);
+  }catch(e){
+    st.quiz = { question:"Couldn't generate a question right now — try again.", options:["OK","OK","OK","OK"], correctIndex:0, explanation:"Backend error: "+(e.message||'unknown') };
+  }
+  renderInteractBody(m);
+}
+
+function showModel(idx){
+  currentIndex = idx;
+  const m = ALL[idx];
+  const reader = document.getElementById('readerInner');
+  document.documentElement.style.setProperty('--accent', famVar(m.family));
+  document.documentElement.style.setProperty('--accent-soft', `color-mix(in srgb, ${famVar(m.family)} 10%, transparent)`);
+
+  const mechHtml = m.mechanism.map(line => `<li>${renderMath(line)}</li>`).join('');
+  const diagramFn = DIAGRAMS[m.diagram];
+  const diagramSvg = diagramFn ? diagramFn() : '';
+
+  reader.innerHTML = `
+    <div class="model-head">
+      <span class="fam-tag"><span class="dot"></span>${m.year} · ${m._section === 'foundations' ? 'Foundations' : 'Modern & Distinct'} · ${m.family}</span>
+      <h1>${m.name}</h1>
+    </div>
+    <div class="block">
+      <h2>Concept</h2>
+      <p>${m.concept}</p>
+    </div>
+    <div class="block">
+      <h2>Mechanism</h2>
+      <ul class="mech-list">${mechHtml}</ul>
+      <div class="diagram-box">${diagramSvg}</div>
+    </div>
+    <div class="block">
+      <div class="significance">${m.significance}</div>
+    </div>
+    ${renderEvolutionBlock(m)}
+    <div class="block">
+      <h2>Go deeper</h2>
+      ${renderInteractPanel(m)}
+    </div>
+    <div class="nav-foot">
+      <button id="prevBtn" ${idx===0?'disabled':''}><span class="dir">← Previous</span>${idx>0?ALL[idx-1].name:''}</button>
+      <button id="nextBtn" ${idx===ALL.length-1?'disabled':''}><span class="dir">Next →</span>${idx<ALL.length-1?ALL[idx+1].name:''}</button>
+    </div>
+  `;
+
+  reader.querySelectorAll('[data-goto]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const targetIdx = idxOf(el.dataset.goto);
+      if(targetIdx>=0) showModel(targetIdx);
+    });
+  });
+
+  // load any saved chat for this model if signed in
+  if(window.AUTH && window.AUTH.getUser() && window.STORE){
+    window.STORE.loadChat(m.id).then(savedChat=>{
+      if(savedChat && savedChat.length){
+        getState(m.id).chat = savedChat;
+        if(getState(m.id).tab === 'chat') renderInteractBody(m);
+      }
+    }).catch(()=>{});
+  }
+
+  renderInteractBody(m);
+  document.querySelectorAll('.interact-tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      getState(m.id).tab = btn.dataset.tab;
+      document.querySelectorAll('.interact-tabs button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderInteractBody(m);
+    });
+  });
+
+  document.querySelectorAll('.idx-link').forEach(a=>{
+    a.classList.toggle('active', parseInt(a.dataset.idx)===idx);
+  });
+  document.getElementById('progress-meta').textContent = `${idx+1} / ${ALL.length}`;
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  if(prevBtn) prevBtn.addEventListener('click', ()=> idx>0 && showModel(idx-1));
+  if(nextBtn) nextBtn.addEventListener('click', ()=> idx<ALL.length-1 && showModel(idx+1));
+
+  window.scrollTo({top:0, behavior:'instant'});
+  const activeLink = document.querySelector('.idx-link.active');
+  if(activeLink) activeLink.scrollIntoView({block:'nearest'});
+}
+
+document.getElementById('mobileToggle').addEventListener('click', ()=>{
+  document.getElementById('indexNav').classList.toggle('open');
+});
+
+let lineageMapBuilt = false;
+function openLineageMap(){
+  const overlay = document.getElementById('lineageOverlay');
+  overlay.classList.add('open');
+  if(!lineageMapBuilt){
+    const body = document.getElementById('lineageModalBody');
+    const { svg, positions } = buildLineageMap(ALL, LINEAGE, (id)=>{
+      overlay.classList.remove('open');
+      showModel(idxOf(id));
+    });
+    body.innerHTML = `<div id="lineageTooltip"></div>` + svg;
+    attachLineageMapInteractivity(body, ALL, positions, (id)=>{
+      overlay.classList.remove('open');
+      showModel(idxOf(id));
+    });
+    lineageMapBuilt = true;
+  }
+}
+document.getElementById('mapToggleBtn').addEventListener('click', openLineageMap);
+document.getElementById('closeLineageBtn').addEventListener('click', ()=>{
+  document.getElementById('lineageOverlay').classList.remove('open');
+});
+document.getElementById('lineageOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'lineageOverlay') document.getElementById('lineageOverlay').classList.remove('open');
+});
+
+buildIndex();
+showModel(0);
+wireAuthModal();
+renderAuthWidget();
+
+window.addEventListener('portal-modules-ready', ()=>{
+  window.AUTH.onChange(()=>{
+    renderAuthWidget();
+    renderInteractBody(ALL[currentIndex]);
+  });
+});
+</script>
+</body>
+</html>
