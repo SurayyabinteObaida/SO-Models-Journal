@@ -18,6 +18,6 @@ const firebaseConfig = {
 };
 
 // Base URL of your running FastAPI backend (no trailing slash).
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = "https://so-models-journal.onrender.com";
 
 export { firebaseConfig, BACKEND_URL };
