@@ -7,6 +7,7 @@ that the frontend calls instead of hitting api.anthropic.com directly:
   POST /api/deepdive   - generate a deep-dive on a model given a prompt instruction
   POST /api/chat       - multi-turn chat scoped to a model's context
   POST /api/quiz       - generate one multiple-choice question (strict JSON)
+  POST /api/define     - define a user-selected term/phrase, in context (cue cards)
 
 Run locally:
   pip install -r requirements.txt
@@ -94,6 +95,15 @@ class QuizRequest(BaseModel):
     concept: str
     mechanism: List[str]
     max_tokens: int = 500
+
+
+class DefineRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
+    term: str = Field(..., description="The exact text the user selected to define")
+    model_name: str = Field(..., description="Which architecture page this was selected from, for context")
+    surrounding_context: str = Field(..., description="A sentence or two around the selection, for disambiguation")
+    max_tokens: int = 250
 
 
 class QuizResponse(BaseModel):
@@ -204,3 +214,25 @@ async def quiz(req: QuizRequest):
         raise HTTPException(status_code=502, detail="Quiz JSON missing required fields.")
 
     return parsed
+
+
+@app.post("/api/define")
+async def define(req: DefineRequest):
+    term = req.term.strip()
+    if not term:
+        raise HTTPException(status_code=400, detail="term must not be empty.")
+    if len(term) > 200:
+        raise HTTPException(status_code=400, detail="Selection too long — select a shorter term or phrase.")
+
+    prompt = (
+        f"The reader is a CS academic reading about \"{req.model_name}\" and selected this exact "
+        f"term/phrase to look up: \"{term}\"\n\n"
+        f"Surrounding context where they selected it: \"{req.surrounding_context}\"\n\n"
+        f"Give a precise, self-contained definition of \"{term}\" as it's used in this specific context. "
+        f"2-4 sentences. Use $...$ for inline LaTeX math if relevant. No preamble like 'this term means' — "
+        f"just the definition directly. Assume graduate-level ML background, so don't over-explain basics "
+        f"unrelated to this specific term."
+    )
+    text = await call_anthropic([{"role": "user", "content": prompt}], req.max_tokens)
+    return {"term": term, "definition": text}
+

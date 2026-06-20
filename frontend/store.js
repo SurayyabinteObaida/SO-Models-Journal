@@ -7,8 +7,12 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   collection,
   addDoc,
+  query,
+  orderBy,
+  getDocs,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { app } from "./auth.js";
@@ -62,5 +66,38 @@ export const STORE = {
       wasCorrect,
       createdAt: serverTimestamp(),
     });
+  },
+
+  /** Saves a defined term (cue card) for later review. Returns the new doc id, or null if signed out. */
+  async saveDefinition(modelId, modelName, term, definition) {
+    const user = AUTH.getUser();
+    if (!user) return null;
+    const col = collection(db, "users", user.uid, "definitions");
+    const ref = await addDoc(col, {
+      modelId,
+      modelName,
+      term,
+      definition,
+      createdAt: serverTimestamp(),
+    });
+    return ref.id;
+  },
+
+  /** Lists all saved term definitions for the signed-in user, newest first. */
+  async listDefinitions() {
+    const user = AUTH.getUser();
+    if (!user) return [];
+    const col = collection(db, "users", user.uid, "definitions");
+    const q = query(col, orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  },
+
+  /** Deletes a saved term definition by its doc id. */
+  async deleteDefinition(definitionId) {
+    const user = AUTH.getUser();
+    if (!user) return;
+    const ref = doc(db, "users", user.uid, "definitions", definitionId);
+    await deleteDoc(ref);
   },
 };

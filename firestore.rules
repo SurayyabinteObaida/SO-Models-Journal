@@ -6,6 +6,7 @@ rules_version = '2';
 //   /users/{uid}/chats/{modelId}        - one doc per model, holds chat message array
 //   /users/{uid}/quizAttempts/{attemptId} - one doc per quiz attempt
 //   /users/{uid}/deepdives/{modelId}    - cached deep-dive generations per model
+//   /users/{uid}/definitions/{definitionId} - saved cue-card term definitions
 //
 // Every doc lives under the requesting user's own uid — nobody can read or
 // write another user's subtree. There is no public/shared collection yet;
@@ -26,6 +27,10 @@ service cloud.firestore {
       }
 
       match /deepdives/{modelId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /definitions/{definitionId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }

@@ -51,6 +51,23 @@ header.top .meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft
   border:none; padding:9px 16px; cursor:pointer; letter-spacing:0.02em;
 }
 #mapToggleBtn:hover{opacity:0.85;}
+#inspectToggleBtn{
+  font-family:var(--sans); font-size:12.5px; font-weight:600; background:var(--paper); color:var(--ink);
+  border:1.4px solid var(--ink); padding:8px 15px; cursor:pointer; letter-spacing:0.02em;
+}
+#inspectToggleBtn:hover{border-color:var(--accent); color:var(--accent);}
+#inspectToggleBtn.active{background:var(--fam-efficiency); color:var(--paper); border-color:var(--fam-efficiency);}
+#savedTermsBtn{
+  font-family:var(--sans); font-size:12.5px; font-weight:600; background:var(--paper); color:var(--ink);
+  border:1.4px solid var(--ink); padding:8px 15px; cursor:pointer; letter-spacing:0.02em;
+  position:relative;
+}
+#savedTermsBtn:hover{border-color:var(--accent); color:var(--accent);}
+#savedTermsBtn .count-badge{
+  position:absolute; top:-7px; right:-7px; background:var(--fam-generative); color:var(--paper);
+  font-family:var(--mono); font-size:10px; min-width:17px; height:17px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center; padding:0 3px;
+}
 
 /* ---------- Auth widget ---------- */
 #authWidget{display:flex; align-items:center; gap:10px; font-family:var(--sans); font-size:12.5px;}
@@ -62,6 +79,58 @@ header.top .meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft
 #authWidget button:hover{background:var(--ink); color:var(--paper);}
 #signInBtn{background:var(--ink); color:var(--paper);}
 #signInBtn:hover{opacity:0.85;}
+
+/* ---------- Inspect mode: selection define button ---------- */
+.reader-inner.inspect-mode{cursor:text;}
+.reader-inner.inspect-mode .block p, .reader-inner.inspect-mode .mech-list li, .reader-inner.inspect-mode .significance, .reader-inner.inspect-mode .evo-delta{
+  background-image: linear-gradient(transparent calc(100% - 1px), var(--accent) 1px);
+  background-size: 100% 0.4em;
+}
+
+#defineSelectionBtn{
+  position:fixed; display:none; z-index:150; font-family:var(--sans); font-size:12.5px; font-weight:600;
+  background:var(--ink); color:var(--paper); border:none; padding:8px 14px; cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25); transform:translate(-50%,-100%);
+}
+#defineSelectionBtn:hover{background:var(--accent);}
+
+/* ---------- Cue card slide-out panel ---------- */
+#cuecardOverlay, #savedTermsOverlay{
+  position:fixed; inset:0; background:rgba(26,26,24,0.35); z-index:160; display:none;
+}
+#cuecardOverlay.open, #savedTermsOverlay.open{display:block;}
+#cuecardPanel, .cuecard-panel-shell{
+  position:fixed; top:0; right:-420px; width:400px; max-width:92vw; height:100vh; background:var(--paper);
+  border-left:2px solid var(--ink); z-index:161; transition:right 0.25s ease; display:flex; flex-direction:column;
+  box-shadow:-6px 0 20px rgba(0,0,0,0.15);
+}
+#cuecardOverlay.open .cuecard-panel-shell, #savedTermsOverlay.open .cuecard-panel-shell{right:0;}
+.cuecard-head{padding:20px 22px 16px; border-bottom:1.5px solid var(--ink); display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+.cuecard-head h3{font-family:var(--serif); font-size:19px; margin:0; line-height:1.3; font-weight:700; color:var(--ink);}
+.cuecard-head .cuecard-close{background:none; border:none; font-size:18px; cursor:pointer; color:var(--ink-soft); padding:2px; flex-shrink:0;}
+.cuecard-body{flex:1; overflow-y:auto; padding:20px 22px; font-size:15px; line-height:1.65;}
+.cuecard-body p{margin:0 0 10px;}
+.cuecard-foot{padding:14px 22px; border-top:1.5px solid var(--rule); display:flex; gap:10px;}
+.cuecard-foot button{
+  flex:1; font-family:var(--sans); font-size:13px; font-weight:600; padding:10px; cursor:pointer; border:1.4px solid var(--ink);
+}
+#saveCuecardBtn{background:var(--ink); color:var(--paper);}
+#saveCuecardBtn:hover{opacity:0.85;}
+#saveCuecardBtn:disabled{opacity:0.4; cursor:default;}
+#closeCuecardBtn{background:var(--paper); color:var(--ink);}
+#closeCuecardBtn:hover{background:var(--rule);}
+
+/* ---------- Saved terms list panel ---------- */
+.cuecard-panel-shell{width:440px;}
+.saved-term-item{
+  border:1.3px solid var(--rule-strong); padding:12px 14px; margin-bottom:10px; border-radius:2px; position:relative;
+}
+.saved-term-item .term-name{font-family:var(--serif); font-weight:700; font-size:15px; margin:0 0 4px;}
+.saved-term-item .term-model{font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); margin-bottom:6px; display:block;}
+.saved-term-item .term-def{font-size:13.5px; line-height:1.55;}
+.saved-term-item .term-delete{position:absolute; top:10px; right:10px; background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;}
+.saved-term-item .term-delete:hover{color:var(--fam-generative);}
+.saved-terms-empty{color:var(--ink-soft); font-size:14px; padding:20px 0; text-align:center;}
 
 #authOverlay{
   position:fixed; inset:0; background:rgba(26,26,24,0.55); z-index:200; display:none;
@@ -311,6 +380,8 @@ a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-o
   <div class="brand">Architectures<small>A reading companion · concept → mechanism → significance</small></div>
   <div class="right">
     <button id="mapToggleBtn">⤢ Lineage map</button>
+    <button id="inspectToggleBtn">◎ Inspect mode</button>
+    <button id="savedTermsBtn">Saved terms<span class="count-badge" id="savedTermsCount" style="display:none;">0</span></button>
     <div id="authWidget"></div>
     <div class="meta" id="progress-meta">— / —</div>
   </div>
@@ -353,6 +424,32 @@ a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-o
     <button class="auth-primary" id="authPrimaryBtn">Sign in</button>
     <button class="auth-google" id="authGoogleBtn">Continue with Google</button>
     <div class="auth-toggle" id="authToggle">Don't have an account? <a id="authToggleLink">Create one</a></div>
+  </div>
+</div>
+
+<button id="defineSelectionBtn">Define</button>
+
+<div id="cuecardOverlay">
+  <div id="cuecardPanel" class="cuecard-panel-shell" style="width:400px;">
+    <div class="cuecard-head">
+      <h3 id="cuecardTerm">—</h3>
+      <button class="cuecard-close" id="cuecardCloseX">✕</button>
+    </div>
+    <div class="cuecard-body" id="cuecardBody"></div>
+    <div class="cuecard-foot">
+      <button id="closeCuecardBtn">Close</button>
+      <button id="saveCuecardBtn">Save term</button>
+    </div>
+  </div>
+</div>
+
+<div id="savedTermsOverlay">
+  <div id="savedTermsPanelInner" class="cuecard-panel-shell">
+    <div class="cuecard-head">
+      <h3>Saved terms</h3>
+      <button class="cuecard-close" id="savedTermsCloseX">✕</button>
+    </div>
+    <div class="cuecard-body" id="savedTermsBody"></div>
   </div>
 </div>
 
@@ -702,6 +799,7 @@ function showModel(idx){
   currentIndex = idx;
   const m = ALL[idx];
   const reader = document.getElementById('readerInner');
+  if(typeof hideDefineButton === 'function') hideDefineButton();
   document.documentElement.style.setProperty('--accent', famVar(m.family));
   document.documentElement.style.setProperty('--accent-soft', `color-mix(in srgb, ${famVar(m.family)} 10%, transparent)`);
 
@@ -808,6 +906,184 @@ document.getElementById('lineageOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'lineageOverlay') document.getElementById('lineageOverlay').classList.remove('open');
 });
 
+// ---------- Inspect mode + cue cards ----------
+let inspectModeOn = false;
+let pendingSelection = null; // { text, contextSentence }
+
+function toggleInspectMode(){
+  inspectModeOn = !inspectModeOn;
+  document.getElementById('inspectToggleBtn').classList.toggle('active', inspectModeOn);
+  document.getElementById('readerInner').classList.toggle('inspect-mode', inspectModeOn);
+  if(!inspectModeOn) hideDefineButton();
+}
+
+function hideDefineButton(){
+  document.getElementById('defineSelectionBtn').style.display = 'none';
+  pendingSelection = null;
+}
+
+function getSurroundingContext(range){
+  // Walk up to the nearest block-level ancestor and use its full text as context.
+  let node = range.commonAncestorContainer;
+  while(node && node.nodeType !== 1) node = node.parentNode;
+  while(node && node !== document.getElementById('readerInner') &&
+        !['P','LI','DIV'].includes(node.tagName)){
+    node = node.parentNode;
+  }
+  return node ? node.textContent.trim().slice(0, 500) : range.toString();
+}
+
+document.addEventListener('selectionchange', ()=>{
+  if(!inspectModeOn) return;
+  const sel = window.getSelection();
+  const text = sel.toString().trim();
+  const btn = document.getElementById('defineSelectionBtn');
+
+  if(!text || text.length < 2 || text.length > 200 || sel.rangeCount === 0){
+    hideDefineButton();
+    return;
+  }
+  // Only react to selections inside the reader content.
+  const range = sel.getRangeAt(0);
+  const readerEl = document.getElementById('readerInner');
+  if(!readerEl.contains(range.commonAncestorContainer)){
+    hideDefineButton();
+    return;
+  }
+
+  pendingSelection = { text, contextSentence: getSurroundingContext(range) };
+  const rect = range.getBoundingClientRect();
+  btn.style.left = (rect.left + rect.width/2) + 'px';
+  btn.style.top = (rect.top - 8) + 'px';
+  btn.style.display = 'block';
+});
+
+document.getElementById('defineSelectionBtn').addEventListener('click', async ()=>{
+  if(!pendingSelection) return;
+  const { text, contextSentence } = pendingSelection;
+  const m = ALL[currentIndex];
+  hideDefineButton();
+  window.getSelection().removeAllRanges();
+  await openCuecard(m, text, contextSentence);
+});
+
+let currentCuecardTerm = null;
+let currentCuecardDefinition = null;
+
+async function openCuecard(m, term, contextSentence){
+  const overlay = document.getElementById('cuecardOverlay');
+  const body = document.getElementById('cuecardBody');
+  const termEl = document.getElementById('cuecardTerm');
+  const saveBtn = document.getElementById('saveCuecardBtn');
+
+  termEl.textContent = term;
+  body.innerHTML = `<span class="loading-dots">Looking it up</span>`;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Save term';
+  overlay.classList.add('open');
+
+  try{
+    const data = await backendCall('/api/define', {
+      term, model_name: m.name, surrounding_context: contextSentence, max_tokens: 250
+    });
+    currentCuecardTerm = data.term;
+    currentCuecardDefinition = data.definition;
+    body.innerHTML = renderRichText(data.definition);
+    saveBtn.disabled = !(window.AUTH && window.AUTH.getUser());
+    if(saveBtn.disabled) saveBtn.textContent = 'Sign in to save';
+  }catch(e){
+    body.innerHTML = `<p style="color:var(--fam-generative)">Couldn't fetch a definition. ${e.message||''}</p>`;
+  }
+}
+
+document.getElementById('cuecardCloseX').addEventListener('click', ()=>{
+  document.getElementById('cuecardOverlay').classList.remove('open');
+});
+document.getElementById('closeCuecardBtn').addEventListener('click', ()=>{
+  document.getElementById('cuecardOverlay').classList.remove('open');
+});
+document.getElementById('cuecardOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'cuecardOverlay') document.getElementById('cuecardOverlay').classList.remove('open');
+});
+document.getElementById('saveCuecardBtn').addEventListener('click', async ()=>{
+  if(!window.AUTH || !window.AUTH.getUser() || !currentCuecardTerm) return;
+  const m = ALL[currentIndex];
+  const btn = document.getElementById('saveCuecardBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try{
+    await window.STORE.saveDefinition(m.id, m.name, currentCuecardTerm, currentCuecardDefinition);
+    btn.textContent = 'Saved ✓';
+    refreshSavedTermsCount();
+  }catch(e){
+    btn.textContent = 'Failed — retry';
+    btn.disabled = false;
+  }
+});
+
+// ---------- Saved terms panel ----------
+async function refreshSavedTermsCount(){
+  const badge = document.getElementById('savedTermsCount');
+  if(!window.AUTH || !window.AUTH.getUser() || !window.STORE){
+    badge.style.display = 'none';
+    return;
+  }
+  try{
+    const terms = await window.STORE.listDefinitions();
+    if(terms.length > 0){
+      badge.textContent = terms.length;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }catch(e){ /* silent — non-critical */ }
+}
+
+async function openSavedTerms(){
+  const overlay = document.getElementById('savedTermsOverlay');
+  const body = document.getElementById('savedTermsBody');
+  overlay.classList.add('open');
+
+  if(!window.AUTH || !window.AUTH.getUser()){
+    body.innerHTML = `<div class="saved-terms-empty">Sign in to save and view terms across visits.</div>`;
+    return;
+  }
+  body.innerHTML = `<span class="loading-dots">Loading</span>`;
+  try{
+    const terms = await window.STORE.listDefinitions();
+    if(terms.length === 0){
+      body.innerHTML = `<div class="saved-terms-empty">No saved terms yet — turn on Inspect mode, select any phrase, and save its definition.</div>`;
+      return;
+    }
+    body.innerHTML = terms.map(t => `
+      <div class="saved-term-item" data-id="${t.id}">
+        <button class="term-delete" data-delete="${t.id}">✕</button>
+        <p class="term-name">${t.term}</p>
+        <span class="term-model">${t.modelName}</span>
+        <div class="term-def">${renderRichText(t.definition)}</div>
+      </div>
+    `).join('');
+    body.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        await window.STORE.deleteDefinition(btn.dataset.delete);
+        openSavedTerms();
+        refreshSavedTermsCount();
+      });
+    });
+  }catch(e){
+    body.innerHTML = `<div class="saved-terms-empty">Couldn't load saved terms. ${e.message||''}</div>`;
+  }
+}
+
+document.getElementById('inspectToggleBtn').addEventListener('click', toggleInspectMode);
+document.getElementById('savedTermsBtn').addEventListener('click', openSavedTerms);
+document.getElementById('savedTermsCloseX').addEventListener('click', ()=>{
+  document.getElementById('savedTermsOverlay').classList.remove('open');
+});
+document.getElementById('savedTermsOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'savedTermsOverlay') document.getElementById('savedTermsOverlay').classList.remove('open');
+});
+
 buildIndex();
 showModel(0);
 wireAuthModal();
@@ -817,8 +1093,10 @@ window.addEventListener('portal-modules-ready', ()=>{
   window.AUTH.onChange(()=>{
     renderAuthWidget();
     renderInteractBody(ALL[currentIndex]);
+    refreshSavedTermsCount();
   });
 });
+
 </script>
 </body>
 </html>
