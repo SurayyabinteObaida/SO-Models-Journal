@@ -8,6 +8,7 @@ that the frontend calls instead of hitting api.anthropic.com directly:
   POST /api/chat       - multi-turn chat scoped to a model's context
   POST /api/quiz       - generate one multiple-choice question (strict JSON)
   POST /api/define     - define a user-selected term/phrase, in context (cue cards)
+  POST /api/critique-pipeline - written AI critique of a "solve the problem" pipeline graph
 
 Run locally:
   pip install -r requirements.txt
@@ -104,6 +105,28 @@ class DefineRequest(BaseModel):
     model_name: str = Field(..., description="Which architecture page this was selected from, for context")
     surrounding_context: str = Field(..., description="A sentence or two around the selection, for disambiguation")
     max_tokens: int = 250
+
+
+class PipelineNode(BaseModel):
+    nodeId: str
+    blockId: str
+    label: str
+
+
+class PipelineEdge(BaseModel):
+    fromNode: str = Field(..., alias="from")
+    toNode: str = Field(..., alias="to")
+
+    model_config = {"populate_by_name": True}
+
+
+class CritiqueRequest(BaseModel):
+    problem_title: str
+    problem_blurb: str
+    nodes: List[PipelineNode]
+    edges: List[PipelineEdge]
+    heuristic_issues: List[str] = Field(default_factory=list)
+    max_tokens: int = 600
 
 
 class QuizResponse(BaseModel):
@@ -235,4 +258,47 @@ async def define(req: DefineRequest):
     )
     text = await call_anthropic([{"role": "user", "content": prompt}], req.max_tokens)
     return {"term": term, "definition": text}
+
+
+def serialize_pipeline(nodes: List[PipelineNode], edges: List[PipelineEdge]) -> str:
+    """Renders the graph as readable pseudo-code for the model to critique, e.g.:
+    n1[Raw text] -> n2[Tokenize] -> n3[TF-IDF] -> n4[Logistic regression] -> n5[Threshold] -> n6[Classification label]
+    Branches and combiners naturally show as multiple lines converging on a shared node id.
+    """
+    node_labels = {n.nodeId: f"{n.nodeId}[{n.label}]" for n in nodes}
+    lines = []
+    if not edges:
+        lines.append("(no connections — " + ", ".join(node_labels.values()) + " are placed but unconnected)")
+    for e in edges:
+        frm = node_labels.get(e.fromNode, e.fromNode)
+        to = node_labels.get(e.toNode, e.toNode)
+        lines.append(f"{frm} -> {to}")
+    return "\n".join(lines)
+
+
+@app.post("/api/critique-pipeline")
+async def critique_pipeline(req: CritiqueRequest):
+    if not req.nodes:
+        raise HTTPException(status_code=400, detail="Pipeline has no blocks to critique.")
+
+    graph_repr = serialize_pipeline(req.nodes, req.edges)
+    heuristic_summary = (
+        "The automatic structural checker found no issues."
+        if not req.heuristic_issues
+        else "The automatic structural checker flagged:\n- " + "\n- ".join(req.heuristic_issues)
+    )
+
+    prompt = (
+        f"A student is designing an ML pipeline to solve: \"{req.problem_title}\" — {req.problem_blurb}\n\n"
+        f"Their proposed pipeline graph (node[block label] -> node[block label]):\n{graph_repr}\n\n"
+        f"{heuristic_summary}\n\n"
+        f"Give a short, direct critique (not a rewrite) covering: (1) whether the overall approach is "
+        f"reasonable for this problem, (2) one specific strength, (3) one specific weakness or risk "
+        f"(e.g. a block choice that's technically valid but a poor fit, a missing consideration like "
+        f"class imbalance or latency, or an over-engineered choice for the problem's scale), and "
+        f"(4) one concrete suggestion for improvement. Write for a CS academic — skip basic explanations, "
+        f"go straight to the substantive assessment. 4 short paragraphs, no headers, no bullet lists."
+    )
+    text = await call_anthropic([{"role": "user", "content": prompt}], req.max_tokens)
+    return {"critique": text}
 
