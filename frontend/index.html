@@ -82,9 +82,15 @@ header.top .meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft
 
 /* ---------- Inspect mode: selection define button ---------- */
 .reader-inner.inspect-mode{cursor:text;}
-.reader-inner.inspect-mode .block p, .reader-inner.inspect-mode .mech-list li, .reader-inner.inspect-mode .significance, .reader-inner.inspect-mode .evo-delta{
-  background-image: linear-gradient(transparent calc(100% - 1px), var(--accent) 1px);
-  background-size: 100% 0.4em;
+.reader-inner.inspect-mode .block p,
+.reader-inner.inspect-mode .mech-list li,
+.reader-inner.inspect-mode .significance,
+.reader-inner.inspect-mode .evo-delta{
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
 }
 
 #defineSelectionBtn{
