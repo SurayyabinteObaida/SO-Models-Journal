@@ -115,7 +115,46 @@ function runHeuristicCheck(graph, problem) {
     }
   }
 
-  const totalChecks = 7;
+  // 8. mustInclude — specific block id(s) the solution is required to contain
+  // (distinct from requiredCategories: this targets one exact block, e.g. a
+  // mandatory human-review step, not just "any postprocessing block will do")
+  let checkedMustInclude = false;
+  const mustInclude = (problem.heuristic.mustInclude || []);
+  if (mustInclude.length > 0) {
+    checkedMustInclude = true;
+    const presentBlockIds = new Set(nodes.map((n) => n.blockId));
+    const missingRequired = mustInclude.filter((id) => !presentBlockIds.has(id));
+    if (missingRequired.length > 0) {
+      issues.push(`This solution must include: ${missingRequired.map((id) => blockById(id)?.label || id).join(", ")}.`);
+    } else {
+      passes.push("Includes every block this problem specifically requires.");
+    }
+  }
+
+  // 9. preferredPattern: "branching" — at least one combiner node is present
+  // and actually satisfies its own minInputs requirement. A combiner with
+  // enough incoming edges necessarily means ≥2 separate upstream chains
+  // converge on it, which is what "branching" means structurally here.
+  // This is advisory, not required — it only ever adds a bonus pass, never
+  // counts against the score, since a clean linear solution is still valid.
+  if (problem.heuristic.preferredPattern === "branching") {
+    const combinerNodes = nodes.filter((n) => {
+      const block = blockById(n.blockId);
+      return block && block.category === "combiner";
+    });
+    const hasSatisfiedCombiner = combinerNodes.some((n) => {
+      const block = blockById(n.blockId);
+      const inCount = (incoming[n.nodeId] || []).length;
+      return inCount >= (block.minInputs || 2);
+    });
+    if (hasSatisfiedCombiner) {
+      passes.push("Bonus: uses a genuine branching/ensemble structure, as this problem invites.");
+    }
+  }
+
+  // totalChecks is dynamic: only mustInclude (when declared) adds to the
+  // denominator. Branching is bonus-only and never affects maxScore.
+  const totalChecks = 7 + (checkedMustInclude ? 1 : 0);
   const passedChecks = totalChecks - issues.length > 0 ? totalChecks - Math.min(issues.length, totalChecks) : 0;
 
   return {
